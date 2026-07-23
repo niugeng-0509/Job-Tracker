@@ -1,0 +1,28 @@
+# Python 虚拟环境
+.venv/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# 测试、类型检查和代码检查缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 编辑器
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
+
+# 环境变量和密钥
+.env
+.env.*
+!.env.example
+
+# 本地运行数据
+data/jobs.json
