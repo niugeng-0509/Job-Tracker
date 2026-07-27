@@ -15,6 +15,7 @@
 
 ## 项目结构
 
+```text
 app/
 ├── models/          # 岗位数据模型
 ├── repositories/    # JSON 数据访问
@@ -22,7 +23,7 @@ app/
 ├── cli.py           # 命令行交互
 ├── exceptions.py    # 自定义异常
 └── main.py          # 程序入口
-
+```
 
 ## 运行环境
 
@@ -43,14 +44,18 @@ source .venv/bin/activate
 python -m app.main
 ```
 
-## 第一阶段升级路线
+运行测试：
 
-1. 增加输入校验、删除和状态筛选
-2. 使用 `dataclass` 定义岗位模型
-3. 增加类型注解和自定义异常
-4. 使用 JSON 保存和读取岗位
-5. 使用 pytest 编写自动测试
-6. 通过独立练习理解 asyncio
+```bash
+python -m pip install pytest
+python -m pytest -v
+```
 
-完整的 AI 大模型开发项目演进计划见
-[docs/PROJECT_ROADMAP.md](docs/PROJECT_ROADMAP.md)。
+## 项目文档
+
+| 文档 | 作用 | 更新频率 |
+| --- | --- | --- |
+| [AGENTS.md](AGENTS.md) | Codex 的检查、教学、修改和验证规则 | 协作方式改变时 |
+| [当前进度](docs/CURRENT_PROGRESS.md) | 当前完成情况、验证证据和下一次任务 | 每天结束时 |
+| [里程碑路线图](docs/PROJECT_ROADMAP.md) | M1-M9 的顺序、交付和退出条件 | 阶段计划改变时 |
+| [学习与架构指南](docs/AI_JOB_COPILOT_LEARNING_GUIDE.md) | 详细知识、系统架构、学习方法和面试参考 | 长期设计改变时 |
