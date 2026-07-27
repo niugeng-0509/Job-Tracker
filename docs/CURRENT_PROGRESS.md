@@ -8,7 +8,7 @@
 
 **M1：可靠的 Python CLI - 测试与工程配置收尾**
 
-CLI 业务主体已完成并经过手工验证，`Job` Model 已有第一组自动化测试。完成 Service、Repository 测试、代码质量检查、CI 和 asyncio 小练习后，才能进入 M2 FastAPI。
+CLI 业务主体已完成并经过手工验证，Model、Service 和 JSON Repository 已有自动化测试。完成代码质量检查、CI 和 asyncio 小练习后，才能进入 M2 FastAPI。
 
 ## 已完成
 
@@ -23,6 +23,8 @@ CLI 业务主体已完成并经过手工验证，`Job` Model 已有第一组自�
 - `ValidationError`、`JobNotFoundError`、`StorageError`
 - CLI 友好错误提示和删除确认
 - `Job` Model 的正常、默认值、输入清理和校验测试
+- Fake Repository、pytest fixture 和 `JobService` 核心业务测试
+- `tmp_path` 隔离、JSON 往返、CRUD 和损坏文件测试
 - README、项目路线图和完整学习架构指南
 - JSON CRUD 代码已推送到 `origin/main`
 
@@ -34,16 +36,19 @@ CLI 业务主体已完成并经过手工验证，`Job` Model 已有第一组自�
 - 状态筛选、大小写不敏感搜索、重复检测通过
 - 错误 ID 显示友好提示
 - 损坏 JSON 转换为 `StorageError`，CLI 不显示 traceback
-- `python -m pytest -v` 通过，共 15 个测试
+- `.venv/bin/python -m compileall -q app` 通过
+- `.venv/bin/python -m pytest tests/test_job_service.py -v` 通过，11 个测试
+- `.venv/bin/python -m pytest tests/test_json_job_repository.py -q` 通过，8 个测试
+- `.venv/bin/python -m pytest -q` 通过，共 34 个测试
 
-CLI 和持久化流程仍主要是手工与临时脚本验证；`Job` Model 已形成 pytest 回归测试。
+CLI 交互仍主要是手工验证；Model、Service 和 JSON Repository 已形成 pytest 回归测试。
 
 ## M1 尚未完成
 
 - [x] `Job` Model pytest
-- [ ] `JobService` pytest
-- [ ] `JsonJobRepository` pytest 和 `tmp_path`
-- [ ] 正常路径与关键异常路径测试
+- [x] `JobService` pytest
+- [x] `JsonJobRepository` pytest 和 `tmp_path`
+- [x] 正常路径与关键异常路径测试
 - [ ] coverage 约 80%
 - [ ] `pyproject.toml`
 - [ ] Ruff
@@ -54,17 +59,17 @@ CLI 和持久化流程仍主要是手工与临时脚本验证；`Job` Model 已�
 
 ## 下一次对话任务
 
-**第四天：Fake Repository 与 `JobService` 单元测试**
+**第六天：`pyproject.toml`、Ruff、mypy 和 coverage**
 
 学习和实施顺序：
 
-1. 理解 Fake、依赖注入和 Service 单元测试边界。
-2. 创建只保存在内存中的 Fake Repository。
-3. 测试添加、查询、修改和删除。
-4. 测试状态筛选和大小写不敏感搜索。
-5. 测试重复岗位和空搜索关键词。
-6. 验证测试不读写真实 `data/jobs.json`。
-7. 运行单文件和全部测试。
+1. 理解统一工程配置、lint、类型检查和覆盖率的职责。
+2. 创建最小 `pyproject.toml`，配置 pytest、Ruff 和 mypy。
+3. 安装 Ruff、mypy 和 pytest-cov 开发工具。
+4. 运行 `ruff check .` 和 `mypy app`，修复实际问题。
+5. 运行 coverage，记录真实结果并定位核心缺口。
+6. 补充必要测试，不为追求数字测试无价值细节。
+7. 运行全部检查并确认 34 个现有测试继续通过。
 
 默认由用户手动输入代码；除非用户明确要求，否则新对话不要直接修改测试或业务文件。
 
@@ -73,19 +78,16 @@ CLI 和持久化流程仍主要是手工与临时脚本验证；`Job` Model 已�
 - `app/cli.py` 有未使用的 `ValidationError` import。
 - `Job.mark_updated()` 当前没有被更新流程使用。
 - 部分文件末尾换行等待 Ruff 阶段统一处理。
-- `JobService` 和 `JsonJobRepository` 尚无自动化测试。
 - `resume_output/` 和 `tools/` 不属于 Job Tracker 提交范围。
 
-## Git 快照
+## Git 说明
 
 ```text
 分支：main
 远程：origin/main
-最新业务提交：95bdd4b
-feat: add JSON persistence and job CRUD operations
 ```
 
-开始新对话时仍需检查实际 `git status`、代码和测试；实际结果优先于本文件。
+提交与远程同步状态每次以实际 `git status` 和 `git log` 为准。
 
 ## 进入 M2 的条件
 
