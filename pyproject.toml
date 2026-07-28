@@ -1,0 +1,39 @@
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 79
+extend-exclude = [
+    ".venv.backup",
+    "resume_output",
+    "tools",
+]
+
+[tool.ruff.lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "B",
+]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["app"]
+strict = true
+pretty = true
+show_error_codes = true
+warn_unused_configs = true
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

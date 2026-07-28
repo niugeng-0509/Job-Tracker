@@ -1,6 +1,6 @@
 """Job Tracker 的命令行交互界面。"""
 
-from app.exceptions import JobTrackerError, ValidationError
+from app.exceptions import JobTrackerError
 from app.models import Job, JobStatus
 from app.services import JobService
 
