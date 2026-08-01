@@ -1,96 +1,90 @@
 # AI Job Copilot 当前进度
 
-本文件记录当前完成情况、验证证据和下一次任务
+本文件记录当前完成情况、验证证据和下一次任务。
 
-最后核对：2026-07-28
+最后核对：2026-08-01
 
 ## 当前阶段
 
-**M1：可靠的 Python CLI - CI、asyncio 与文档收尾**
+**M1 已完成：准备进入 M2 FastAPI 多用户后端**
 
-CLI 业务主体、核心自动化测试和本地质量检查已经通过。完成基础 CI、asyncio 小练习和 README 收尾后，才能进入 M2 FastAPI。
+可靠 Python CLI 的功能、异常、JSON 持久化、分层、自动测试、质量门槛、基础 CI、asyncio 练习和 README 均已完成。包含全部 38 个测试的远程 CI 已通过，M1 退出条件满足；M2 尚未开始。
 
-## 已完成
+## M1 已完成
 
-- `Job` dataclass、`JobStatus` enum、UUID 和时间字段
-- 公司/岗位非空校验、URL 校验和输入清理
-- Model、Repository、Service、CLI 分层
-- `JobRepository` Protocol 和构造函数依赖注入
-- 岗位添加、查看、修改、删除
-- 状态筛选、关键词搜索和重复岗位检测
-- JSON 序列化、反序列化和永久保存
-- 临时文件、`fsync`、`os.replace` 安全写入
-- `ValidationError`、`JobNotFoundError`、`StorageError`
-- CLI 友好错误提示和删除确认
-- `Job` Model 的正常、默认值、输入清理和校验测试
-- Fake Repository、pytest fixture 和 `JobService` 核心业务测试
-- `tmp_path` 隔离、JSON 往返、CRUD 和损坏文件测试
-- `pyproject.toml` 统一 pytest、Ruff、mypy 和 coverage 配置
-- Ruff 检查、mypy 严格类型检查和业务层 coverage
-- README、项目路线图和完整学习架构指南
-- JSON CRUD 代码已推送到 `origin/main`
+- `Job` dataclass、`JobStatus` enum、UUID、时间字段和输入校验
+- Model、Repository、Service、CLI 分层及构造函数依赖注入
+- 岗位 CRUD、状态筛选、关键词搜索和重复岗位检测
+- JSON 往返和永久保存，临时文件、`fsync`、`os.replace` 安全写入
+- `ValidationError`、`JobNotFoundError`、`StorageError` 和 CLI 友好提示
+- Model、Service、JSON Repository 的正常与关键异常路径测试
+- Fake Repository、pytest fixture、`tmp_path` 和真实数据隔离
+- `pyproject.toml` 中的 pytest、Ruff、mypy 和 coverage 配置
+- 业务层 80% coverage 门槛、Ruff 和 mypy 严格检查
+- GitHub Actions 在 push/PR 时自动执行质量检查
+- asyncio JD 练习：顺序执行、`gather()` 并发、异常校验和 4 个测试
+- README 架构、数据流、安装、运行、测试、asyncio 和 CI 说明
+- 项目路线图和完整学习架构指南
 
 ## 已验证
 
-- `.venv/bin/python -m compileall -q app` 通过
-- `python3 -m app.main` 能显示完整菜单并退出
-- 临时目录中连续添加、重启读取、修改和删除通过
-- 状态筛选、大小写不敏感搜索、重复检测通过
-- 错误 ID 显示友好提示
-- 损坏 JSON 转换为 `StorageError`，CLI 不显示 traceback
-- `.venv/bin/python -m pytest -q`：34 passed
+- `.venv/bin/python -m compileall -q app examples`：通过
+- `.venv/bin/python -m pytest --cov=app.models --cov=app.services --cov=app.repositories --cov-report=term-missing --cov-fail-under=80`：38 passed
+- 业务逻辑 branch coverage：91.50%，达到 80% 门槛
 - `.venv/bin/ruff check .`：All checks passed
-- `.venv/bin/python -m mypy app`：11 个源码文件无问题
-- `.venv/bin/python -m pytest --cov=app.models --cov=app.services --cov=app.repositories --cov-report=term-missing`：34 passed，业务逻辑 branch coverage 92%
+- `.venv/bin/python -m mypy app examples`：13 个源码文件无问题
+- `.venv/bin/python -m examples.async_jd_fetch`：顺序约 0.90 秒，并发约 0.30 秒
+- GitHub Actions run `30693228223`：提交 `b589914` 状态 `completed / success`
 
-coverage 只统计 Model、Service 和 Repository；CLI 与 `main.py` 按当前范围决定保留手工验证，不计入 92%。
+coverage 只统计 Model、Service 和 Repository；CLI、`main.py` 和 asyncio 示例不计入 91.50%。CI 已实际收集并运行全部 38 个测试。
 
-## M1 尚未完成
+## M1 验收
 
-- [x] `Job` Model pytest
-- [x] `JobService` pytest
-- [x] `JsonJobRepository` pytest 和 `tmp_path`
-- [x] 正常路径与关键异常路径测试
-- [x] 业务逻辑 coverage 约 80%（实际 92%）
-- [x] `pyproject.toml`
-- [x] Ruff
-- [x] mypy
-- [ ] GitHub Actions CI
-- [ ] 独立 asyncio 并发获取 JD 练习
-- [ ] README 架构说明和终端演示收尾
+- [x] CLI 正常路径和关键异常路径可靠
+- [x] JSON 安全持久化，不覆盖损坏文件
+- [x] 测试不操作真实 `data/jobs.json`
+- [x] 业务逻辑 coverage 超过 80%
+- [x] Ruff、mypy 和 pytest 通过
+- [x] 基础 GitHub Actions CI 通过
+- [x] 独立 asyncio 并发练习通过
+- [x] README 可指导安装、运行和测试
+
+## M2 尚未完成
+
+- [ ] FastAPI 应用骨架和 `/health` 接口
+- [ ] 岗位请求/响应 Pydantic 模型和 CRUD API
+- [ ] PostgreSQL、SQLAlchemy 2 和 Alembic
+- [ ] 注册、登录、密码哈希和 JWT
+- [ ] 用户岗位、时间线、待办和文件的数据隔离
+- [ ] 分页、排序、筛选及正常/错误/未认证/越权测试
+- [ ] OpenAPI 和 Docker Compose 完整流程
 
 ## 下一次对话任务
 
-**第七天：GitHub Actions 基础 CI**
+**M2 第一步：建立最小 FastAPI 应用并完成 `/health` 测试**
 
 学习和实施顺序：
 
-1. 理解 workflow、job、step 和干净环境验证。
-2. 创建 `.github/workflows/ci.yml`。
-3. 配置 Python 3.10 并安装 pytest、pytest-cov、Ruff 和 mypy。
-4. 在 CI 运行 Ruff、mypy 和 34 个测试。
-5. 对业务逻辑 coverage 设置 80% 最低门槛。
-6. 推送后检查 GitHub Actions 的真实结果。
-7. 修复本地通过但 CI 失败的环境差异。
+1. 理解 HTTP 请求/响应、状态码、ASGI 和 FastAPI 应用入口。
+2. 确定 M2 目录边界，暂不引入数据库、JWT 或岗位 CRUD。
+3. 安装并记录 FastAPI、Uvicorn、httpx 等本阶段基础依赖。
+4. 手动创建最小应用和 `GET /health`，返回明确的 JSON 响应。
+5. 使用 FastAPI TestClient 编写正常路径测试。
+6. 运行服务、接口测试、Ruff 和 mypy，确认 CLI 原有 38 个测试不回归。
 
-默认由用户手动输入代码；除非用户明确要求，否则新对话不要直接修改测试或业务文件。
+默认由用户手动输入代码；除非用户明确要求，否则不要直接修改业务文件。
 
 ## 当前已知问题
 
-- `Job.mark_updated()` 当前没有被更新流程使用。
-- 部分文件末尾换行等待 Ruff 阶段统一处理。
-- 开发工具只安装在本地 `.venv`，CI 和可复现安装尚未完成。
-- `resume_output/` 和 `tools/` 不属于 Job Tracker 提交范围。
+- `Job.mark_updated()` 当前没有被更新流程使用，但不阻塞 M1 验收。
+- `.venv.backup/` 和 `tools/` 是未跟踪本地目录，不属于提交范围。
+- M2 的依赖管理、API 目录和数据库方案尚未实现，应从最小 `/health` 开始。
 
 ## Git 说明
 
 ```text
 分支：main
-远程：origin/main
+M1 功能与 README：已推送
+远程 CI：38 个测试通过
+本地排除：.venv.backup/、tools/
 ```
-
-提交与远程同步状态每次以实际 `git status` 和 `git log` 为准。
-
-## 进入 M2 的条件
-
-pytest、覆盖率、Ruff、mypy、基础 CI、asyncio 练习和 README 收尾全部完成并验证通过。
