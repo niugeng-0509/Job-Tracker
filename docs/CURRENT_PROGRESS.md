@@ -6,9 +6,9 @@
 
 ## 当前阶段
 
-**M1 已完成：准备进入 M2 FastAPI 多用户后端**
+**M1 已完成，M2 进行中：最小 FastAPI 应用已建立**
 
-可靠 Python CLI 的功能、异常、JSON 持久化、分层、自动测试、质量门槛、基础 CI、asyncio 练习和 README 均已完成。包含全部 38 个测试的远程 CI 已通过，M1 退出条件满足；M2 尚未开始。
+可靠 Python CLI 已通过 M1 验收。M2 已完成独立 FastAPI 应用入口、`GET /health`、接口测试和依赖记录；岗位 Schema、CRUD API、数据库与认证尚未开始。
 
 ## M1 已完成
 
@@ -29,14 +29,19 @@
 ## 已验证
 
 - `.venv/bin/python -m compileall -q app examples`：通过
-- `.venv/bin/python -m pytest --cov=app.models --cov=app.services --cov=app.repositories --cov-report=term-missing --cov-fail-under=80`：38 passed
+- `.venv/bin/python -m pytest -q`：40 passed
+- `.venv/bin/python -m pytest --cov=app.models --cov=app.services --cov=app.repositories --cov-report=term-missing --cov-fail-under=80`：40 passed
 - 业务逻辑 branch coverage：91.50%，达到 80% 门槛
 - `.venv/bin/ruff check .`：All checks passed
-- `.venv/bin/python -m mypy app examples`：13 个源码文件无问题
+- `.venv/bin/python -m mypy app examples`：15 个源码文件无问题
+- `.venv/bin/python -m pip check`：无依赖冲突
+- CLI 输入 `7`：菜单正常显示并退出
+- Uvicorn 实际启动：`GET /health` 返回 200 和 `{"status":"ok"}`，`POST /health` 返回 405
+- `/docs` 返回 200，OpenAPI 包含 `GET /health`
 - `.venv/bin/python -m examples.async_jd_fetch`：顺序约 0.90 秒，并发约 0.30 秒
 - GitHub Actions run `30693228223`：提交 `b589914` 状态 `completed / success`
 
-coverage 只统计 Model、Service 和 Repository；CLI、`main.py` 和 asyncio 示例不计入 91.50%。CI 已实际收集并运行全部 38 个测试。
+coverage 只统计 Model、Service 和 Repository；CLI、API、`main.py` 和 asyncio 示例不计入 91.50%。`/health` 有 2 个独立接口测试。现有远程 CI 证据属于 M1；M2 的 CI 配置已改为安装 `requirements-dev.txt`，需提交推送后才能验证远程结果。
 
 ## M1 验收
 
@@ -49,9 +54,11 @@ coverage 只统计 Model、Service 和 Repository；CLI、`main.py` 和 asyncio 
 - [x] 独立 asyncio 并发练习通过
 - [x] README 可指导安装、运行和测试
 
-## M2 尚未完成
+## M2 进度
 
-- [ ] FastAPI 应用骨架和 `/health` 接口
+- [x] 独立 FastAPI 应用骨架和 `GET /health`
+- [x] 健康检查正常路径、错误方法测试和 OpenAPI 验证
+- [x] 运行与开发依赖文件，CI 改为从依赖文件安装
 - [ ] 岗位请求/响应 Pydantic 模型和 CRUD API
 - [ ] PostgreSQL、SQLAlchemy 2 和 Alembic
 - [ ] 注册、登录、密码哈希和 JWT
@@ -61,16 +68,16 @@ coverage 只统计 Model、Service 和 Repository；CLI、`main.py` 和 asyncio 
 
 ## 下一次对话任务
 
-**M2 第一步：建立最小 FastAPI 应用并完成 `/health` 测试**
+**M2 第二步：使用 Pydantic v2 设计岗位 API Schema**
 
 学习和实施顺序：
 
-1. 理解 HTTP 请求/响应、状态码、ASGI 和 FastAPI 应用入口。
-2. 确定 M2 目录边界，暂不引入数据库、JWT 或岗位 CRUD。
-3. 安装并记录 FastAPI、Uvicorn、httpx 等本阶段基础依赖。
-4. 手动创建最小应用和 `GET /health`，返回明确的 JSON 响应。
-5. 使用 FastAPI TestClient 编写正常路径测试。
-6. 运行服务、接口测试、Ruff 和 mypy，确认 CLI 原有 38 个测试不回归。
+1. 理解 Pydantic Schema 与现有 domain `Job` 的职责差异。
+2. 建立 `app/schemas/`，只创建当前需要的岗位 Schema。
+3. 定义创建请求、更新请求和响应模型，明确必填、可选和默认字段。
+4. 验证空公司、空岗位、非法 URL、非法状态和部分更新语义。
+5. 编写 Schema 单元测试，暂不连接 Repository 或数据库。
+6. 运行全量测试、Ruff 和 mypy，确认 CLI 与 `/health` 不回归。
 
 默认由用户手动输入代码；除非用户明确要求，否则不要直接修改业务文件。
 
@@ -78,13 +85,15 @@ coverage 只统计 Model、Service 和 Repository；CLI、`main.py` 和 asyncio 
 
 - `Job.mark_updated()` 当前没有被更新流程使用，但不阻塞 M1 验收。
 - `.venv.backup/` 和 `tools/` 是未跟踪本地目录，不属于提交范围。
-- M2 的依赖管理、API 目录和数据库方案尚未实现，应从最小 `/health` 开始。
+- M2 `/health` 已通过本地验证，远程 CI 结果待确认。
+- PostgreSQL、SQLAlchemy、Alembic、JWT 和岗位 API 尚未实现。
 
 ## Git 说明
 
 ```text
 分支：main
 M1 功能与 README：已推送
-远程 CI：38 个测试通过
+M2 /health：本地验证完成
+远程 CI：最近一次 M1 运行通过
 本地排除：.venv.backup/、tools/
 ```

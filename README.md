@@ -1,6 +1,6 @@
 # Job Tracker
 
-一个使用 Python 构建的命令行求职岗位管理器，也是 AI Job Copilot 项目的 M1 基础版本。当前版本重点练习可靠的业务分层、JSON 持久化、自动测试、静态检查、CI 和 asyncio 并发。
+一个使用 Python 构建的求职岗位管理项目。项目已完成 M1 命令行基础版本，并进入 M2 FastAPI 后端阶段；当前同时提供可靠的 CLI 和最小健康检查 API。
 
 ## 当前功能
 
@@ -12,12 +12,14 @@
 - 使用 UUID 标识岗位并记录创建、更新时间
 - 将数据永久保存到本地 JSON 文件
 - 将业务错误转换为用户可理解的 CLI 提示
+- 提供 FastAPI 应用入口和 `GET /health` 健康检查
+- 自动生成 OpenAPI、Swagger UI 和 ReDoc 文档
 
 岗位状态包括：待投递、已投递、笔试、面试、Offer 和已拒绝。
 
 ## 架构与数据流
 
-项目按照职责分层，CLI 不直接读写 JSON，Service 不依赖具体存储实现：
+项目按照职责分层，CLI 不直接读写 JSON，Service 不依赖具体存储实现。当前 API 健康检查独立于岗位业务链路：
 
 ```text
 用户输入
@@ -31,6 +33,14 @@ JobRepository Protocol：定义数据访问接口
 JsonJobRepository：序列化、反序列化和安全文件写入
    ↓
 data/jobs.json
+
+HTTP 客户端
+   ↓
+Uvicorn：接收 HTTP 并调用 ASGI 应用
+   ↓
+FastAPI：匹配路由并生成 JSON 响应
+   ↓
+GET /health → {"status": "ok"}
 ```
 
 `Job` Model 负责岗位数据、默认值和字段校验；自定义异常从底层向上传递，最终由 CLI 转换成用户提示。Repository 通过构造函数注入 `JobService`，因此测试时可以替换成 Fake Repository，不会操作真实业务数据。
@@ -44,6 +54,7 @@ JSON 保存采用“同目录临时文件 → `flush` → `fsync` → `os.replac
 ├── .github/workflows/
 │   └── ci.yml                       # GitHub Actions 质量检查
 ├── app/
+│   ├── api/                         # FastAPI 应用和 API 交互层
 │   ├── models/                      # Job 数据模型和状态枚举
 │   ├── repositories/                # Repository 接口和 JSON 实现
 │   ├── services/                    # 岗位业务逻辑
@@ -56,17 +67,21 @@ JSON 保存采用“同目录临时文件 → `flush` → `fsync` → `os.replac
 │   ├── test_job.py                  # Model 测试
 │   ├── test_job_service.py          # Service 测试
 │   ├── test_json_job_repository.py  # JSON Repository 测试
-│   └── test_async_jd_fetch.py       # asyncio 练习测试
+│   ├── test_async_jd_fetch.py       # asyncio 练习测试
+│   └── test_health.py               # FastAPI 健康检查测试
 ├── docs/                            # 进度、路线图和学习指南
 ├── pyproject.toml                   # pytest、Ruff、mypy、coverage 配置
+├── requirements.txt                 # 应用运行依赖
+├── requirements-dev.txt             # 测试和质量检查依赖
 └── README.md
 ```
 
 ## 运行环境
 
 - Python 3.10 或更高版本
-- 当前业务运行只使用 Python 标准库
-- pytest、pytest-cov、Ruff 和 mypy 仅用于开发与验证
+- CLI 业务核心只使用 Python 标准库
+- FastAPI 和 Uvicorn 用于 Web API
+- HTTPX2、pytest、pytest-cov、Ruff 和 mypy 用于开发与验证
 
 ## 安装开发环境
 
@@ -83,11 +98,11 @@ Windows PowerShell 使用：
 .venv\Scripts\Activate.ps1
 ```
 
-安装开发工具：
+安装应用和开发依赖：
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install "pytest>=9.0" "pytest-cov>=7.0" "ruff>=0.15" "mypy>=2.0"
+python -m pip install -r requirements-dev.txt
 ```
 
 ## 运行 CLI
@@ -111,6 +126,36 @@ python -m app.main
 ```
 
 岗位数据默认保存在 `data/jobs.json`。该文件属于本地运行数据，已经被 Git 忽略，不应提交到仓库。
+
+## 运行 FastAPI
+
+启动开发服务器：
+
+```bash
+python -m uvicorn app.api.main:app --reload
+```
+
+健康检查：
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+预期响应：
+
+```json
+{"status":"ok"}
+```
+
+交互式文档和 OpenAPI Schema：
+
+```text
+http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/redoc
+http://127.0.0.1:8000/openapi.json
+```
+
+当前 `/health` 只检查 API 进程能否响应，不读取 JSON，也不连接尚未引入的数据库。
 
 ## asyncio JD 练习
 
@@ -137,7 +182,7 @@ python -m examples.async_jd_fetch
 python -m pytest -q
 ```
 
-当前测试套件共 38 个测试，覆盖 Model、Service、JSON Repository 和 asyncio 练习。Repository 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`。
+当前测试套件共 40 个测试，覆盖 Model、Service、JSON Repository、asyncio 练习和 FastAPI 健康检查。Repository 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`；API 测试使用进程内 TestClient，不需要监听真实端口。
 
 运行 Ruff：
 
@@ -162,7 +207,7 @@ python -m pytest \
   --cov-fail-under=80
 ```
 
-最近一次本地验证为 38 tests passed，业务层 branch coverage 91.50%。覆盖率只统计 Model、Service 和 Repository，不包括 CLI、`main.py` 和示例代码。
+最近一次本地验证为 40 tests passed，业务层 branch coverage 91.50%。覆盖率只统计 Model、Service 和 Repository，不包括 CLI、API、`main.py` 和示例代码；`/health` 由独立接口测试覆盖。
 
 ## 持续集成
 
@@ -184,4 +229,4 @@ python -m pytest \
 | [里程碑路线图](docs/PROJECT_ROADMAP.md) | M1-M9 的交付顺序和退出条件 |
 | [学习与架构指南](docs/AI_JOB_COPILOT_LEARNING_GUIDE.md) | 详细知识、系统架构和学习方法 |
 
-当前实现是 AI Job Copilot 的可靠 CLI 基础。后续里程碑会在通过 M1 验收后继续增加 FastAPI、数据库、LLM、RAG 和 Agent 能力；这些功能尚未包含在当前版本中。
+当前实现是 AI Job Copilot 的可靠 CLI 基础和 M2 最小 FastAPI 入口。岗位 API、数据库、认证、LLM、RAG 和 Agent 能力尚未实现。
