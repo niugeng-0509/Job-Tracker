@@ -2,7 +2,7 @@
 
 本文件记录当前完成情况、验证证据和下一次任务。
 
-最后核对：2026-08-01
+最后核对：2026-08-02
 
 ## 当前阶段
 
@@ -39,9 +39,9 @@
 - Uvicorn 实际启动：`GET /health` 返回 200 和 `{"status":"ok"}`，`POST /health` 返回 405
 - `/docs` 返回 200，OpenAPI 包含 `GET /health`
 - `.venv/bin/python -m examples.async_jd_fetch`：顺序约 0.90 秒，并发约 0.30 秒
-- GitHub Actions run `30693228223`：提交 `b589914` 状态 `completed / success`
+- GitHub Actions run `30730553236`：提交 `eaecb34` 状态 `completed / success`
 
-coverage 只统计 Model、Service 和 Repository；CLI、API、`main.py` 和 asyncio 示例不计入 91.50%。`/health` 有 2 个独立接口测试。现有远程 CI 证据属于 M1；M2 的 CI 配置已改为安装 `requirements-dev.txt`，需提交推送后才能验证远程结果。
+coverage 只统计 Model、Service 和 Repository；CLI、API、`main.py` 和 asyncio 示例不计入 91.50%。`/health` 有 2 个独立接口测试。M2 的 CI 已从 `requirements-dev.txt` 安装依赖，并在远程运行成功。
 
 ## M1 验收
 
@@ -85,7 +85,7 @@ coverage 只统计 Model、Service 和 Repository；CLI、API、`main.py` 和 as
 
 - `Job.mark_updated()` 当前没有被更新流程使用，但不阻塞 M1 验收。
 - `.venv.backup/` 和 `tools/` 是未跟踪本地目录，不属于提交范围。
-- M2 `/health` 已通过本地验证，远程 CI 结果待确认。
+- M2 `/health` 已通过本地和远程 CI 验证。
 - PostgreSQL、SQLAlchemy、Alembic、JWT 和岗位 API 尚未实现。
 
 ## Git 说明
@@ -93,7 +93,7 @@ coverage 只统计 Model、Service 和 Repository；CLI、API、`main.py` 和 as
 ```text
 分支：main
 M1 功能与 README：已推送
-M2 /health：本地验证完成
-远程 CI：最近一次 M1 运行通过
+M2 /health：已推送
+远程 CI：run 30730553236 通过
 本地排除：.venv.backup/、tools/
 ```
