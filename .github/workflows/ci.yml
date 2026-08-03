@@ -41,6 +41,7 @@ jobs:
         run: >-
           python -m pytest
           --cov=app.models
+          --cov=app.schemas
           --cov=app.services
           --cov=app.repositories
           --cov-report=term-missing

@@ -57,6 +57,7 @@ JSON 保存采用“同目录临时文件 → `flush` → `fsync` → `os.replac
 │   ├── api/                         # FastAPI 应用和 API 交互层
 │   ├── models/                      # Job 数据模型和状态枚举
 │   ├── repositories/                # Repository 接口和 JSON 实现
+│   ├── schemas/                     # Pydantic API 请求和响应模型
 │   ├── services/                    # 岗位业务逻辑
 │   ├── cli.py                       # 命令行交互
 │   ├── exceptions.py                # 自定义异常
@@ -68,7 +69,8 @@ JSON 保存采用“同目录临时文件 → `flush` → `fsync` → `os.replac
 │   ├── test_job_service.py          # Service 测试
 │   ├── test_json_job_repository.py  # JSON Repository 测试
 │   ├── test_async_jd_fetch.py       # asyncio 练习测试
-│   └── test_health.py               # FastAPI 健康检查测试
+│   ├── test_health.py               # FastAPI 健康检查测试
+│   └── test_job_schemas.py          # 岗位 API Schema 测试
 ├── docs/                            # 进度、路线图和学习指南
 ├── pyproject.toml                   # pytest、Ruff、mypy、coverage 配置
 ├── requirements.txt                 # 应用运行依赖
@@ -182,7 +184,7 @@ python -m examples.async_jd_fetch
 python -m pytest -q
 ```
 
-当前测试套件共 40 个测试，覆盖 Model、Service、JSON Repository、asyncio 练习和 FastAPI 健康检查。Repository 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`；API 测试使用进程内 TestClient，不需要监听真实端口。
+当前测试套件共 53 个测试，覆盖 Model、Schema、Service、JSON Repository、asyncio 练习和 FastAPI 健康检查。Repository 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`；API 测试使用进程内 TestClient，不需要监听真实端口。
 
 运行 Ruff：
 
@@ -201,13 +203,14 @@ python -m mypy app examples
 ```bash
 python -m pytest \
   --cov=app.models \
+  --cov=app.schemas \
   --cov=app.services \
   --cov=app.repositories \
   --cov-report=term-missing \
   --cov-fail-under=80
 ```
 
-最近一次本地验证为 40 tests passed，业务层 branch coverage 91.50%。覆盖率只统计 Model、Service 和 Repository，不包括 CLI、API、`main.py` 和示例代码；`/health` 由独立接口测试覆盖。
+最近一次本地验证为 53 tests passed。覆盖率统计 Model、Schema、Service 和 Repository，不包括 CLI、API、`main.py` 和示例代码；`/health` 由独立接口测试覆盖。实际覆盖率结果记录在 `docs/CURRENT_PROGRESS.md`。
 
 ## 持续集成
 
@@ -216,7 +219,7 @@ python -m pytest \
 1. Ruff 代码检查
 2. `app` 类型检查
 3. 全部 pytest 测试
-4. Model、Service、Repository 的 80% coverage 门槛
+4. Model、Schema、Service、Repository 的 80% coverage 门槛
 
 任意步骤失败，CI 都会失败，从而帮助发现环境依赖、类型错误、测试回归和覆盖率下降。
 
