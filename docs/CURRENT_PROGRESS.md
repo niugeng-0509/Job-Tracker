@@ -39,9 +39,9 @@
 - CLI 输入 `7`：菜单正常显示并退出
 - Uvicorn 实际启动：`GET /health` 返回 200，`POST /health` 返回 405，`/docs` 和 OpenAPI 正常
 - `.venv/bin/python -m examples.async_jd_fetch`：顺序约 0.90 秒，并发约 0.30 秒
-- GitHub Actions run `30730553236`：提交 `eaecb34` 状态 `completed / success`
+- GitHub Actions run `30797793242`：提交 `bafc206` 状态 `completed / success`
 
-coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 和 asyncio 示例不计入 93.56%。`/health` 有 2 个独立接口测试。Schema 和更新后的 CI 配置尚未提交，远程 CI 证据仍属于上一提交。
+coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 和 asyncio 示例不计入 93.56%。`/health` 有 2 个独立接口测试。Schema 和更新后的 coverage 配置已通过远程 CI。
 
 ## M1 验收
 
@@ -86,7 +86,7 @@ coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 
 
 - `Job.mark_updated()` 当前没有被更新流程使用，但不阻塞 M1 验收。
 - `.venv.backup/` 和 `tools/` 是未跟踪本地目录，不属于提交范围。
-- 岗位 Schema、测试和 coverage 配置仅本地完成，尚未提交。
+- 岗位 Schema、测试和 coverage 配置已通过本地与远程 CI 验证。
 - PostgreSQL、SQLAlchemy、Alembic、JWT 和岗位 API 尚未实现。
 
 ## Git 说明
@@ -94,7 +94,7 @@ coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 
 ```text
 分支：main
 M2 /health：已推送
-M2 岗位 Schema：本地验证完成，尚未提交
-远程 CI：run 30730553236 通过
+M2 岗位 Schema：已推送
+远程 CI：run 30797793242 通过
 本地排除：.venv.backup/、tools/
 ```
