@@ -1,6 +1,6 @@
 # Job Tracker
 
-一个使用 Python 构建的求职岗位管理项目。项目已完成 M1 命令行基础版本，并进入 M2 FastAPI 后端阶段；当前同时提供可靠的 CLI 和最小健康检查 API。
+一个使用 Python 构建的求职岗位管理项目。项目已完成 M1 命令行基础版本，并进入 M2 FastAPI 后端阶段；当前同时提供可靠的 CLI、健康检查和创建岗位 API。
 
 ## 当前功能
 
@@ -13,13 +13,14 @@
 - 将数据永久保存到本地 JSON 文件
 - 将业务错误转换为用户可理解的 CLI 提示
 - 提供 FastAPI 应用入口和 `GET /health` 健康检查
+- 提供 `POST /jobs`，支持请求校验、201 响应和重复岗位 409 错误
 - 自动生成 OpenAPI、Swagger UI 和 ReDoc 文档
 
 岗位状态包括：待投递、已投递、笔试、面试、Offer 和已拒绝。
 
 ## 架构与数据流
 
-项目按照职责分层，CLI 不直接读写 JSON，Service 不依赖具体存储实现。当前 API 健康检查独立于岗位业务链路：
+项目按照职责分层，CLI 和 API 不直接读写 JSON，Service 不依赖具体存储实现：
 
 ```text
 用户输入
@@ -39,8 +40,8 @@ HTTP 客户端
 Uvicorn：接收 HTTP 并调用 ASGI 应用
    ↓
 FastAPI：匹配路由并生成 JSON 响应
-   ↓
-GET /health → {"status": "ok"}
+   ├── GET /health → {"status": "ok"}
+   └── POST /jobs → JobCreate → JobService → JsonJobRepository
 ```
 
 `Job` Model 负责岗位数据、默认值和字段校验；自定义异常从底层向上传递，最终由 CLI 转换成用户提示。Repository 通过构造函数注入 `JobService`，因此测试时可以替换成 Fake Repository，不会操作真实业务数据。
@@ -184,7 +185,7 @@ python -m examples.async_jd_fetch
 python -m pytest -q
 ```
 
-当前测试套件共 53 个测试，覆盖 Model、Schema、Service、JSON Repository、asyncio 练习和 FastAPI 健康检查。Repository 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`；API 测试使用进程内 TestClient，不需要监听真实端口。
+当前测试套件共 57 个测试，覆盖 API、Model、Schema、Service、JSON Repository 和 asyncio 练习。Repository 和岗位 API 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`；API 测试使用进程内 TestClient，不需要监听真实端口。
 
 运行 Ruff：
 
@@ -202,6 +203,7 @@ python -m mypy app examples
 
 ```bash
 python -m pytest \
+  --cov=app.api \
   --cov=app.models \
   --cov=app.schemas \
   --cov=app.services \
@@ -210,7 +212,7 @@ python -m pytest \
   --cov-fail-under=80
 ```
 
-最近一次本地验证为 53 tests passed。覆盖率统计 Model、Schema、Service 和 Repository，不包括 CLI、API、`main.py` 和示例代码；`/health` 由独立接口测试覆盖。实际覆盖率结果记录在 `docs/CURRENT_PROGRESS.md`。
+最近一次本地验证为 57 tests passed，API、Model、Schema、Service 和 Repository 的 branch coverage 为 92.86%。覆盖率不包括 CLI、`app/main.py` 和示例代码。
 
 ## 持续集成
 
@@ -219,7 +221,7 @@ python -m pytest \
 1. Ruff 代码检查
 2. `app` 类型检查
 3. 全部 pytest 测试
-4. Model、Schema、Service、Repository 的 80% coverage 门槛
+4. API、Model、Schema、Service、Repository 的 80% coverage 门槛
 
 任意步骤失败，CI 都会失败，从而帮助发现环境依赖、类型错误、测试回归和覆盖率下降。
 

@@ -2,10 +2,14 @@
 
 from fastapi import FastAPI, status
 
+from app.api.routes.jobs import router as jobs_router
+
 app = FastAPI(
     title="AI Job Copilot API",
     version="0.1.0",
 )
+
+app.include_router(jobs_router)
 
 
 @app.get(

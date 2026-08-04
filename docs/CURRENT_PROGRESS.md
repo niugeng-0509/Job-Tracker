@@ -2,13 +2,13 @@
 
 本文件记录当前完成情况、验证证据和下一次任务。
 
-最后核对：2026-08-03
+最后核对：2026-08-04
 
 ## 当前阶段
 
-**M1 已完成，M2 进行中：岗位 API Schema 已完成**
+**M1 已完成，M2 进行中：`POST /jobs` 已完成**
 
-可靠 Python CLI 已通过 M1 验收。M2 已完成 FastAPI 入口、`GET /health`、`JobCreate`、`JobUpdate`、`JobResponse` 及其测试；岗位 CRUD API、数据库与认证尚未开始。
+可靠 Python CLI 已通过 M1 验收。M2 已完成 FastAPI 入口、岗位 Schema 和第一个创建接口；岗位查询、修改、删除、数据库与认证尚未开始。
 
 ## M1 已完成
 
@@ -19,29 +19,27 @@
 - `ValidationError`、`JobNotFoundError`、`StorageError` 和 CLI 友好提示
 - Model、Service、JSON Repository 的正常与关键异常路径测试
 - Fake Repository、pytest fixture、`tmp_path` 和真实数据隔离
-- `pyproject.toml` 中的 pytest、Ruff、mypy 和 coverage 配置
 - 业务层 80% coverage 门槛、Ruff 和 mypy 严格检查
 - GitHub Actions 在 push/PR 时自动执行质量检查
 - asyncio JD 练习：顺序执行、`gather()` 并发、异常校验和 4 个测试
-- README 架构、数据流、安装、运行、测试、asyncio 和 CI 说明
-- 项目路线图和完整学习架构指南
 
 ## 已验证
 
 - `.venv/bin/python -m compileall -q app examples`：通过
-- `.venv/bin/python -m pytest -q`：53 passed
-- `.venv/bin/python -m pytest --cov=app.models --cov=app.schemas --cov=app.services --cov=app.repositories --cov-report=term-missing --cov-fail-under=80`：53 passed
-- Model、Schema、Service、Repository branch coverage：93.56%，达到 80% 门槛
+- `.venv/bin/python -m pytest -q`：57 passed
+- `.venv/bin/python -m pytest --cov=app.api --cov=app.models --cov=app.schemas --cov=app.services --cov=app.repositories --cov-report=term-missing --cov-fail-under=80`：57 passed
+- API、Model、Schema、Service、Repository branch coverage：92.86%，达到 80% 门槛
+- `app.api` 独立 coverage：87%，岗位 Router 为 100%
 - `app.schemas` 独立 branch coverage：100%
 - `.venv/bin/ruff check .`：All checks passed
-- `.venv/bin/python -m mypy app examples`：17 个源码文件无问题
+- `.venv/bin/python -m mypy app examples`：20 个源码文件无问题
 - `.venv/bin/python -m pip check`：无依赖冲突
 - CLI 输入 `7`：菜单正常显示并退出
 - Uvicorn 实际启动：`GET /health` 返回 200，`POST /health` 返回 405，`/docs` 和 OpenAPI 正常
 - `.venv/bin/python -m examples.async_jd_fetch`：顺序约 0.90 秒，并发约 0.30 秒
 - GitHub Actions run `30797793242`：提交 `bafc206` 状态 `completed / success`
 
-coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 和 asyncio 示例不计入 93.56%。`/health` 有 2 个独立接口测试。Schema 和更新后的 coverage 配置已通过远程 CI。
+coverage 统计 API、Model、Schema、Service 和 Repository；CLI、`app/main.py` 和 asyncio 示例不计入 92.86%。`POST /jobs`、测试和更新后的 CI 配置已完成本地验证，远程由 GitHub Actions 在 push/PR 时自动验证。
 
 ## M1 验收
 
@@ -60,7 +58,8 @@ coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 
 - [x] 健康检查正常路径、错误方法测试和 OpenAPI 验证
 - [x] 运行与开发依赖文件，CI 改为从依赖文件安装
 - [x] `JobCreate`、`JobUpdate`、`JobResponse` 及正常/异常路径测试
-- [ ] 岗位 CRUD API 与业务异常 HTTP 映射
+- [x] `POST /jobs`、201/409/422、依赖覆盖和临时数据隔离
+- [ ] 岗位查询、修改、删除 API 与其错误映射
 - [ ] PostgreSQL、SQLAlchemy 2 和 Alembic
 - [ ] 注册、登录、密码哈希和 JWT
 - [ ] 用户岗位、时间线、待办和文件的数据隔离
@@ -69,16 +68,16 @@ coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 
 
 ## 下一次对话任务
 
-**M2 第三步：建立岗位 Router 并实现第一个 `POST /jobs`**
+**M2 第四步：实现 `GET /jobs` 和 `GET /jobs/{job_id}`**
 
 学习和实施顺序：
 
-1. 理解 `APIRouter`、请求体、响应模型和 HTTP 201。
-2. 建立岗位 Router，并通过依赖函数获得 `JobService`。
-3. 将 `JobCreate` 显式转换为 `JobService.add_job()` 参数。
-4. 将返回的 domain `Job` 转换为 `JobResponse`。
-5. 将重复岗位等业务异常映射为明确的 HTTP 错误。
-6. 编写正常、422 和重复岗位测试，确认 CLI 与 `/health` 不回归。
+1. 理解 GET、列表响应、路径参数和 HTTP 404。
+2. 为 `GET /jobs` 定义 `list[JobResponse]` 响应。
+3. 为 `GET /jobs/{job_id}` 调用 `JobService.get_job()`。
+4. 将 `JobNotFoundError` 映射为 404。
+5. 测试空列表、已有数据、单条查询和不存在 ID。
+6. 运行全量测试、Ruff、mypy 和 API coverage。
 
 默认由用户手动输入代码；除非用户明确要求，否则不要直接修改业务文件。
 
@@ -86,8 +85,7 @@ coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 
 
 - `Job.mark_updated()` 当前没有被更新流程使用，但不阻塞 M1 验收。
 - `.venv.backup/` 和 `tools/` 是未跟踪本地目录，不属于提交范围。
-- 岗位 Schema、测试和 coverage 配置已通过本地与远程 CI 验证。
-- PostgreSQL、SQLAlchemy、Alembic、JWT 和岗位 API 尚未实现。
+- PostgreSQL、SQLAlchemy、Alembic、JWT 和其余岗位 API 尚未实现。
 
 ## Git 说明
 
@@ -95,6 +93,7 @@ coverage 统计 Model、Schema、Service 和 Repository；CLI、API、`main.py` 
 分支：main
 M2 /health：已推送
 M2 岗位 Schema：已推送
-远程 CI：run 30797793242 通过
+M2 POST /jobs：已完成
+远程 CI：GitHub Actions 在 push/PR 时自动运行
 本地排除：.venv.backup/、tools/
 ```

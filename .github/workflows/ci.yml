@@ -40,6 +40,7 @@ jobs:
       - name: Test with coverage
         run: >-
           python -m pytest
+          --cov=app.api
           --cov=app.models
           --cov=app.schemas
           --cov=app.services
