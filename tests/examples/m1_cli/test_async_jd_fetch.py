@@ -2,12 +2,12 @@ import asyncio
 
 import pytest
 
-from app.exceptions import ValidationError
-from app.models import Job
-from examples.async_jd_fetch import (
+from examples.m1_cli.async_jd_fetch import (
     fetch_concurrently,
     fetch_job_description,
 )
+from examples.m1_cli.exceptions import ValidationError
+from examples.m1_cli.models import Job
 
 
 def test_fetch_job_description_returns_content() -> None:

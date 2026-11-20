@@ -7,12 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from app.exceptions import (
+from examples.m1_cli.exceptions import (
     JobNotFoundError,
     StorageError,
     ValidationError,
 )
-from app.models import Job, JobStatus
+from examples.m1_cli.models import Job, JobStatus
 
 
 class JsonJobRepository:

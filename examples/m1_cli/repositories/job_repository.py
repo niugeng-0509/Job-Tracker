@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from app.models import Job
+from examples.m1_cli.models import Job
 
 
 class JobRepository(Protocol):

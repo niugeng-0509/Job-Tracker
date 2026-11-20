@@ -1,8 +1,8 @@
 """岗位相关的业务逻辑。"""
 
-from app.exceptions import ValidationError
-from app.models import Job, JobStatus
-from app.repositories import JobRepository
+from examples.m1_cli.exceptions import ValidationError
+from examples.m1_cli.models import Job, JobStatus
+from examples.m1_cli.repositories import JobRepository
 
 
 class JobService:

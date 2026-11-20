@@ -1,8 +1,8 @@
 import pytest
 
-from app.exceptions import JobNotFoundError, ValidationError
-from app.models import Job, JobStatus
-from app.services import JobService
+from examples.m1_cli.exceptions import JobNotFoundError, ValidationError
+from examples.m1_cli.models import Job, JobStatus
+from examples.m1_cli.services import JobService
 
 
 class FakeJobRepository:

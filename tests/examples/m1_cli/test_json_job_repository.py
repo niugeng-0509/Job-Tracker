@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from app.exceptions import JobNotFoundError, StorageError
-from app.models import Job, JobStatus
-from app.repositories import JsonJobRepository
+from examples.m1_cli.exceptions import JobNotFoundError, StorageError
+from examples.m1_cli.models import Job, JobStatus
+from examples.m1_cli.repositories import JsonJobRepository
 
 
 @pytest.fixture

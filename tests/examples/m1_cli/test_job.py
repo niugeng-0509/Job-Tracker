@@ -3,8 +3,8 @@ from uuid import UUID
 
 import pytest
 
-from app.exceptions import ValidationError
-from app.models import Job, JobStatus
+from examples.m1_cli.exceptions import ValidationError
+from examples.m1_cli.models import Job, JobStatus
 
 
 def test_create_job_with_explicit_values() -> None:

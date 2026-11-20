@@ -1,4 +1,4 @@
-"""项目中使用的自定义异常。"""
+"""M1 CLI 示例使用的自定义异常。"""
 
 
 class JobTrackerError(Exception):

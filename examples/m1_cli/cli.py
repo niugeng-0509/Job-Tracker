@@ -1,8 +1,8 @@
 """Job Tracker 的命令行交互界面。"""
 
-from app.exceptions import JobTrackerError
-from app.models import Job, JobStatus
-from app.services import JobService
+from examples.m1_cli.exceptions import JobTrackerError
+from examples.m1_cli.models import Job, JobStatus
+from examples.m1_cli.services import JobService
 
 
 class JobTrackerCLI:

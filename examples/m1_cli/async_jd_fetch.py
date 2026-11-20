@@ -2,8 +2,8 @@ import asyncio
 from collections.abc import Sequence
 from time import perf_counter
 
-from app.exceptions import ValidationError
-from app.models import Job
+from examples.m1_cli.exceptions import ValidationError
+from examples.m1_cli.models import Job
 
 
 async def fetch_job_description(

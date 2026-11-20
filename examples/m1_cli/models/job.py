@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
-from app.exceptions import ValidationError
+from examples.m1_cli.exceptions import ValidationError
 
 
 class JobStatus(str, Enum):
@@ -57,4 +57,3 @@ class Job:
         """刷新岗位记录的更新时间。"""
 
         self.updated_at = datetime.now(timezone.utc)
-        
