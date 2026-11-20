@@ -1,2 +1,1 @@
 """Job Tracker application package."""
-
