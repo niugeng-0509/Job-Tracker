@@ -494,7 +494,7 @@ flowchart LR
 
 #### 验收标准
 
-- `python -m app.main` 能完成全部功能。
+- `python -m examples.m1_cli.main` 能完成 M1 CLI 全部功能。
 - 文件不存在时正常启动。
 - JSON 损坏时显示友好错误，不覆盖损坏文件。
 - 测试不操作真实 `data/jobs.json`。

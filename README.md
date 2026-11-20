@@ -1,6 +1,6 @@
 # Job Tracker
 
-一个使用 Python 构建的求职岗位管理项目。项目已完成 M1 命令行基础版本，并进入 M2 FastAPI 后端阶段；当前同时提供可靠的 CLI、健康检查和创建岗位 API。
+一个使用 Python 构建的求职管理项目。M1 CLI 和 M2 多用户 FastAPI 后端已经实现，提供 PostgreSQL 持久化、JWT 认证、岗位管理、投递时间线、待办和文件元数据管理。
 
 ## 当前功能
 
@@ -13,19 +13,22 @@
 - 将数据永久保存到本地 JSON 文件
 - 将业务错误转换为用户可理解的 CLI 提示
 - 提供 FastAPI 应用入口和 `GET /health` 健康检查
-- 提供 `POST /jobs`，支持请求校验、201 响应和重复岗位 409 错误
+- 注册、登录、Argon2 密码哈希和带过期时间的 JWT
+- 带用户隔离的岗位 CRUD、分页、排序、状态与关键词组合筛选
+- 投递时间线、待办任务和受类型、内容、大小限制的文件上传
+- SQLAlchemy 2 ORM、Alembic 迁移、PostgreSQL 和 Docker Compose
 - 自动生成 OpenAPI、Swagger UI 和 ReDoc 文档
 
 岗位状态包括：待投递、已投递、笔试、面试、Offer 和已拒绝。
 
 ## 架构与数据流
 
-项目按照职责分层，CLI 和 API 不直接读写 JSON，Service 不依赖具体存储实现：
+项目把正式后端与历史学习示例分开：`app/` 是 M2 及后续正式主线，`examples/m1_cli/` 完整保留 M1 CLI。
 
 ```text
 用户输入
    ↓
-CLI：读取输入、展示结果、转换友好提示
+M1 CLI 示例：读取输入、展示结果、转换友好提示
    ↓
 JobService：重复检测、搜索、筛选和 CRUD 业务规则
    ↓
@@ -35,16 +38,22 @@ JsonJobRepository：序列化、反序列化和安全文件写入
    ↓
 data/jobs.json
 
-HTTP 客户端
+正式 HTTP 客户端
    ↓
-Uvicorn：接收 HTTP 并调用 ASGI 应用
+Router：接收 HTTP 参数并返回响应，不访问数据库
    ↓
-FastAPI：匹配路由并生成 JSON 响应
-   ├── GET /health → {"status": "ok"}
-   └── POST /jobs → JobCreate → JobService → JsonJobRepository
+Service：认证、重复检测、所有权和文件规则
+   ↓
+Unit of Work：统一一次业务操作的事务边界
+   ↓
+Repository Protocol：定义数据访问契约
+   ↓
+SQLAlchemy Repository：查询强制包含 user_id
+   ↓
+PostgreSQL：User、Job、ApplicationEvent、Task、Document
 ```
 
-`Job` Model 负责岗位数据、默认值和字段校验；自定义异常从底层向上传递，最终由 CLI 转换成用户提示。Repository 通过构造函数注入 `JobService`，因此测试时可以替换成 Fake Repository，不会操作真实业务数据。
+正式后端中，Pydantic Schema 只负责 API 输入输出，SQLAlchemy Model 只负责数据库映射，Service 负责业务规则。Service 依赖 `UnitOfWork` 和 Repository Protocol，不依赖具体 SQLAlchemy Repository；领域异常由 FastAPI 统一转换为 HTTP 状态码。这样 Router、业务规则、查询和事务可以分别测试。
 
 JSON 保存采用“同目录临时文件 → `flush` → `fsync` → `os.replace`”流程，避免写入过程中断后直接损坏正式文件。损坏的 JSON 会转换成 `StorageError`，不会被读取流程覆盖。
 
@@ -54,24 +63,27 @@ JSON 保存采用“同目录临时文件 → `flush` → `fsync` → `os.replac
 .
 ├── .github/workflows/
 │   └── ci.yml                       # GitHub Actions 质量检查
-├── app/
-│   ├── api/                         # FastAPI 应用和 API 交互层
-│   ├── models/                      # Job 数据模型和状态枚举
-│   ├── repositories/                # Repository 接口和 JSON 实现
-│   ├── schemas/                     # Pydantic API 请求和响应模型
-│   ├── services/                    # 岗位业务逻辑
-│   ├── cli.py                       # 命令行交互
-│   ├── exceptions.py                # 自定义异常
-│   └── main.py                      # 依赖组装和程序入口
+├── app/                             # M2 及后续正式后端
+│   ├── api/
+│   │   ├── dependencies/            # Session、服务组装和当前用户依赖
+│   │   ├── routes/                  # 轻量 HTTP Router
+│   │   └── exception_handlers.py    # 领域异常到 HTTP 的统一映射
+│   ├── core/                        # 配置和 JWT/密码安全
+│   ├── db/                          # Session、ORM Model 和 Unit of Work
+│   ├── domain/                      # 业务枚举和领域异常
+│   ├── repositories/                # 数据访问 Protocol 与 SQLAlchemy 实现
+│   ├── schemas/                     # 按资源拆分的 Pydantic Schema
+│   ├── services/                    # 认证、岗位、事件、待办、文件业务
+│   └── main.py                      # 正式 FastAPI 入口
 ├── examples/
-│   └── async_jd_fetch.py            # asyncio 顺序/并发获取 JD 练习
+│   └── m1_cli/                      # M1 CLI、JSON Repository 和 asyncio
 ├── tests/
-│   ├── test_job.py                  # Model 测试
-│   ├── test_job_service.py          # Service 测试
-│   ├── test_json_job_repository.py  # JSON Repository 测试
-│   ├── test_async_jd_fetch.py       # asyncio 练习测试
+│   ├── examples/m1_cli/             # M1 示例完整测试
 │   ├── test_health.py               # FastAPI 健康检查测试
-│   └── test_job_schemas.py          # 岗位 API Schema 测试
+│   ├── test_job_schemas.py          # 岗位 API Schema 测试
+│   ├── test_jobs_api.py             # 完整 API 接口测试
+│   ├── test_repositories.py         # SQLAlchemy Repository 集成测试
+│   └── test_services.py             # Service 与事务单元测试
 ├── docs/                            # 进度、路线图和学习指南
 ├── pyproject.toml                   # pytest、Ruff、mypy、coverage 配置
 ├── requirements.txt                 # 应用运行依赖
@@ -111,7 +123,7 @@ python -m pip install -r requirements-dev.txt
 ## 运行 CLI
 
 ```bash
-python -m app.main
+python -m examples.m1_cli.main
 ```
 
 启动后会显示：
@@ -135,7 +147,7 @@ python -m app.main
 启动开发服务器：
 
 ```bash
-python -m uvicorn app.api.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 健康检查：
@@ -158,14 +170,32 @@ http://127.0.0.1:8000/redoc
 http://127.0.0.1:8000/openapi.json
 ```
 
-当前 `/health` 只检查 API 进程能否响应，不读取 JSON，也不连接尚未引入的数据库。
+当前 `/health` 只检查 API 进程能否响应，不执行数据库查询。
+
+## PostgreSQL 与 Docker Compose
+
+复制并修改环境变量后启动完整环境：
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+非容器环境先设置 `DATABASE_URL` 和 `JWT_SECRET`，再执行：
+
+```bash
+alembic upgrade head
+python -m uvicorn app.main:app --reload
+```
+
+在 `/docs` 中先调用 `POST /auth/register`，再使用 Authorize 表单登录。除注册、登录和健康检查外，业务接口都要求 Bearer Token。
 
 ## asyncio JD 练习
 
 运行独立示例：
 
 ```bash
-python -m examples.async_jd_fetch
+python -m examples.m1_cli.async_jd_fetch
 ```
 
 示例使用 `asyncio.sleep()` 模拟外部 I/O，不访问真实网站。三个岗位逐个等待约需 0.90 秒，使用 `asyncio.gather()` 并发调度约需 0.30 秒：
@@ -185,7 +215,7 @@ python -m examples.async_jd_fetch
 python -m pytest -q
 ```
 
-当前测试套件共 57 个测试，覆盖 API、Model、Schema、Service、JSON Repository 和 asyncio 练习。Repository 和岗位 API 测试使用 pytest 的 `tmp_path`，不会读写真实的 `data/jobs.json`；API 测试使用进程内 TestClient，不需要监听真实端口。
+当前测试套件共 58 个测试，覆盖认证、用户隔离、API、Model、Schema、Service、Unit of Work、SQLAlchemy/JSON Repository 和 asyncio 练习。API 集成测试使用独立 SQLite 数据库和临时上传目录，不接触本地业务数据。
 
 运行 Ruff：
 
@@ -203,16 +233,15 @@ python -m mypy app examples
 
 ```bash
 python -m pytest \
-  --cov=app.api \
-  --cov=app.models \
-  --cov=app.schemas \
-  --cov=app.services \
-  --cov=app.repositories \
+  --cov=app \
+  --cov=examples.m1_cli.models \
+  --cov=examples.m1_cli.services \
+  --cov=examples.m1_cli.repositories \
   --cov-report=term-missing \
   --cov-fail-under=80
 ```
 
-最近一次本地验证为 57 tests passed，API、Model、Schema、Service 和 Repository 的 branch coverage 为 92.86%。覆盖率不包括 CLI、`app/main.py` 和示例代码。
+最近一次本地验证为 58 tests passed，正式后端与 M1 核心层 branch coverage 为 93.76%。覆盖率不包括交互式 CLI、M1 入口和 asyncio 演示代码。
 
 ## 持续集成
 
@@ -234,4 +263,4 @@ python -m pytest \
 | [里程碑路线图](docs/PROJECT_ROADMAP.md) | M1-M9 的交付顺序和退出条件 |
 | [学习与架构指南](docs/AI_JOB_COPILOT_LEARNING_GUIDE.md) | 详细知识、系统架构和学习方法 |
 
-当前实现是 AI Job Copilot 的可靠 CLI 基础和 M2 最小 FastAPI 入口。岗位 API、数据库、认证、LLM、RAG 和 Agent 能力尚未实现。
+当前实现已覆盖 M2 多用户后端代码范围。下一阶段是 M3 LLM 岗位分析与聊天；本机未安装 Docker CLI，因此容器实际启动仍需在有 Docker 的环境验证。

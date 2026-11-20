@@ -2,98 +2,69 @@
 
 本文件记录当前完成情况、验证证据和下一次任务。
 
-最后核对：2026-08-04
+最后核对：2026-11-20
 
 ## 当前阶段
 
-**M1 已完成，M2 进行中：`POST /jobs` 已完成**
+**M1 已完成；M2 功能代码已完成，等待 Docker 环境实机启动验收。**
 
-可靠 Python CLI 已通过 M1 验收。M2 已完成 FastAPI 入口、岗位 Schema 和第一个创建接口；岗位查询、修改、删除、数据库与认证尚未开始。
+M2 已从单用户 JSON API 演进为 SQLAlchemy 多用户后端。认证、岗位、投递时间线、待办、文件元数据、迁移和 Compose 均已实现；本机没有 Docker CLI，不能声称 PostgreSQL 容器实际启动通过。
 
-## M1 已完成
+## M2 已实现
 
-- `Job` dataclass、`JobStatus` enum、UUID、时间字段和输入校验
-- Model、Repository、Service、CLI 分层及构造函数依赖注入
-- 岗位 CRUD、状态筛选、关键词搜索和重复岗位检测
-- JSON 往返和永久保存，临时文件、`fsync`、`os.replace` 安全写入
-- `ValidationError`、`JobNotFoundError`、`StorageError` 和 CLI 友好提示
-- Model、Service、JSON Repository 的正常与关键异常路径测试
-- Fake Repository、pytest fixture、`tmp_path` 和真实数据隔离
-- 业务层 80% coverage 门槛、Ruff 和 mypy 严格检查
-- GitHub Actions 在 push/PR 时自动执行质量检查
-- asyncio JD 练习：顺序执行、`gather()` 并发、异常校验和 4 个测试
+- SQLAlchemy 2 ORM：User、Job、ApplicationEvent、Task、Document
+- PostgreSQL URL、psycopg 驱动和 Alembic 初始迁移
+- 注册、登录、Argon2 密码哈希、JWT 签发/校验/过期
+- 当前用户依赖和 SQLAlchemy 查询条件级 `user_id` 隔离
+- 岗位 CRUD、重复检测、分页、排序、状态与关键词筛选
+- 投递事件创建与列表
+- 待办创建、列表、完成状态筛选和部分更新
+- 文件上传、列表、删除、随机存储名、大小和内容检查
+- 越权资源统一返回 404，不泄露资源是否存在
+- Dockerfile、Compose、`.env.example` 和启动迁移
+- OpenAPI 注册、登录、岗位、事件、待办和文件完整路径
+- 正式代码集中在 `app/`，M1 完整示例集中在 `examples/m1_cli/`
+- M2 路由按 auth、jobs、events、tasks、documents 分类
+- Router、Service、Unit of Work、Repository、ORM 五层职责已拆分
+- Service 仅依赖 Protocol，SQLAlchemy Repository 由依赖注入层组装
+- 领域异常统一映射为 401/404/409/413/415/422/503 响应
+- Pydantic Schema 按 auth、jobs、events、tasks、documents 拆分
 
 ## 已验证
 
-- `.venv/bin/python -m compileall -q app examples`：通过
-- `.venv/bin/python -m pytest -q`：57 passed
-- `.venv/bin/python -m pytest --cov=app.api --cov=app.models --cov=app.schemas --cov=app.services --cov=app.repositories --cov-report=term-missing --cov-fail-under=80`：57 passed
-- API、Model、Schema、Service、Repository branch coverage：92.86%，达到 80% 门槛
-- `app.api` 独立 coverage：87%，岗位 Router 为 100%
-- `app.schemas` 独立 branch coverage：100%
+- `.venv/bin/python -m pytest -q`：58 passed
 - `.venv/bin/ruff check .`：All checks passed
-- `.venv/bin/python -m mypy app examples`：20 个源码文件无问题
+- `.venv/bin/python -m mypy app`：41 个源码文件无问题
 - `.venv/bin/python -m pip check`：无依赖冲突
-- CLI 输入 `7`：菜单正常显示并退出
-- Uvicorn 实际启动：`GET /health` 返回 200，`POST /health` 返回 405，`/docs` 和 OpenAPI 正常
-- `.venv/bin/python -m examples.async_jd_fetch`：顺序约 0.90 秒，并发约 0.30 秒
-- GitHub Actions run `30797793242`：提交 `bafc206` 状态 `completed / success`
+- 正式后端与 M1 核心层 branch coverage：93.76%，达到 80% 门槛
+- Service、Unit of Work 和 SQLAlchemy Repository 分层测试通过
+- API 集成测试：认证失败、未认证、岗位 CRUD、分页筛选、404/409/415/422
+- 用户隔离测试：跨用户岗位查询、修改、删除、事件和待办均不可访问
+- 文件测试：非法 MIME、伪 PDF、文本上传、列表和删除
+- Alembic SQLite：upgrade → downgrade → upgrade 通过
+- Alembic PostgreSQL offline SQL：UUID、外键、索引和五张表生成通过
+- Compose YAML 结构与全部要求的 OpenAPI 路径：程序化验证通过
+- Docker 实际启动：未验证，当前机器没有 `docker` 命令
 
-coverage 统计 API、Model、Schema、Service 和 Repository；CLI、`app/main.py` 和 asyncio 示例不计入 92.86%。`POST /jobs`、测试和更新后的 CI 配置已完成本地验证，远程由 GitHub Actions 在 push/PR 时自动验证。
+## M2 验收
 
-## M1 验收
+- [x] 多用户 REST API、JWT 和密码哈希
+- [x] 所有用户资源在 SQL 查询中强制隔离
+- [x] 正常、错误、未认证和越权自动测试
+- [x] 分页、排序和组合筛选
+- [x] Alembic 迁移可升降级并生成 PostgreSQL DDL
+- [x] OpenAPI 可覆盖注册、登录、岗位和文件流程
+- [x] Dockerfile 与 Compose 配置
+- [ ] 在安装 Docker 的环境执行 `docker compose up --build` 并走通真实 PostgreSQL 流程
 
-- [x] CLI 正常路径和关键异常路径可靠
-- [x] JSON 安全持久化，不覆盖损坏文件
-- [x] 测试不操作真实 `data/jobs.json`
-- [x] 业务逻辑 coverage 超过 80%
-- [x] Ruff、mypy 和 pytest 通过
-- [x] 基础 GitHub Actions CI 通过
-- [x] 独立 asyncio 并发练习通过
-- [x] README 可指导安装、运行和测试
+## 下一次最小任务
 
-## M2 进度
+1. 在有 Docker 的环境运行 `docker compose up --build`。
+2. 从 `/docs` 走通注册、登录、创建岗位和上传文件。
+3. 验证通过后将 M2 标记为完全验收，进入 M3 LLM Provider 接口。
 
-- [x] 独立 FastAPI 应用骨架和 `GET /health`
-- [x] 健康检查正常路径、错误方法测试和 OpenAPI 验证
-- [x] 运行与开发依赖文件，CI 改为从依赖文件安装
-- [x] `JobCreate`、`JobUpdate`、`JobResponse` 及正常/异常路径测试
-- [x] `POST /jobs`、201/409/422、依赖覆盖和临时数据隔离
-- [ ] 岗位查询、修改、删除 API 与其错误映射
-- [ ] PostgreSQL、SQLAlchemy 2 和 Alembic
-- [ ] 注册、登录、密码哈希和 JWT
-- [ ] 用户岗位、时间线、待办和文件的数据隔离
-- [ ] 分页、排序、筛选及正常/错误/未认证/越权测试
-- [ ] OpenAPI 和 Docker Compose 完整流程
+## 已知问题与 Git
 
-## 下一次对话任务
-
-**M2 第四步：实现 `GET /jobs` 和 `GET /jobs/{job_id}`**
-
-学习和实施顺序：
-
-1. 理解 GET、列表响应、路径参数和 HTTP 404。
-2. 为 `GET /jobs` 定义 `list[JobResponse]` 响应。
-3. 为 `GET /jobs/{job_id}` 调用 `JobService.get_job()`。
-4. 将 `JobNotFoundError` 映射为 404。
-5. 测试空列表、已有数据、单条查询和不存在 ID。
-6. 运行全量测试、Ruff、mypy 和 API coverage。
-
-默认由用户手动输入代码；除非用户明确要求，否则不要直接修改业务文件。
-
-## 当前已知问题
-
-- `Job.mark_updated()` 当前没有被更新流程使用，但不阻塞 M1 验收。
-- `.venv.backup/` 和 `tools/` 是未跟踪本地目录，不属于提交范围。
-- PostgreSQL、SQLAlchemy、Alembic、JWT 和其余岗位 API 尚未实现。
-
-## Git 说明
-
-```text
-分支：main
-M2 /health：已推送
-M2 岗位 Schema：已推送
-M2 POST /jobs：已完成
-远程 CI：GitHub Actions 在 push/PR 时自动运行
-本地排除：.venv.backup/、tools/
-```
+- `Job.mark_updated()` 只属于 `examples/m1_cli`；正式 API 使用 ORM 的 `updated_at`。
+- `.venv.backup/` 和 `tools/` 已被忽略，不属于项目交付。
+- M1 搬迁、M2 后端、测试、容器和 CI 已拆分为本地提交，尚未推送；远程 CI 需在 push/PR 后验证。
