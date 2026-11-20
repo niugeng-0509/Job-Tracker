@@ -37,13 +37,17 @@ jobs:
       - name: Type-check with mypy
         run: python -m mypy app
 
+      - name: Verify database migration
+        env:
+          DATABASE_URL: sqlite:///./migration-test.db
+        run: alembic upgrade head
+
       - name: Test with coverage
         run: >-
           python -m pytest
-          --cov=app.api
-          --cov=app.models
-          --cov=app.schemas
-          --cov=app.services
-          --cov=app.repositories
+          --cov=app
+          --cov=examples.m1_cli.models
+          --cov=examples.m1_cli.services
+          --cov=examples.m1_cli.repositories
           --cov-report=term-missing
           --cov-fail-under=80
