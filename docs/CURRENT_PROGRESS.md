@@ -6,9 +6,9 @@
 
 ## 当前阶段
 
-**M1 已完成；M2 功能代码已完成，等待 Docker 环境实机启动验收。**
+**M1、M2 已完成并通过验收；下一阶段进入 M3。**
 
-M2 已从单用户 JSON API 演进为 SQLAlchemy 多用户后端。认证、岗位、投递时间线、待办、文件元数据、迁移和 Compose 均已实现；本机没有 Docker CLI，不能声称 PostgreSQL 容器实际启动通过。
+M2 已从单用户 JSON API 演进为 SQLAlchemy 多用户后端。认证、岗位、投递时间线、待办、文件元数据、迁移和 Compose 均已实现，并已在 Docker Desktop 的真实 PostgreSQL 17 环境完成业务与持久化验收。
 
 ## M2 已实现
 
@@ -34,7 +34,7 @@ M2 已从单用户 JSON API 演进为 SQLAlchemy 多用户后端。认证、岗�
 
 - `.venv/bin/python -m pytest -q`：58 passed
 - `.venv/bin/ruff check .`：All checks passed
-- `.venv/bin/python -m mypy app`：41 个源码文件无问题
+- `.venv/bin/python -m mypy app examples`：54 个源码文件无问题
 - `.venv/bin/python -m pip check`：无依赖冲突
 - 正式后端与 M1 核心层 branch coverage：93.76%，达到 80% 门槛
 - Service、Unit of Work 和 SQLAlchemy Repository 分层测试通过
@@ -44,7 +44,11 @@ M2 已从单用户 JSON API 演进为 SQLAlchemy 多用户后端。认证、岗�
 - Alembic SQLite：upgrade → downgrade → upgrade 通过
 - Alembic PostgreSQL offline SQL：UUID、外键、索引和五张表生成通过
 - Compose YAML 结构与全部要求的 OpenAPI 路径：程序化验证通过
-- Docker 实际启动：未验证，当前机器没有 `docker` 命令
+- Docker Desktop Engine 29.9.3、Compose v5.7.0：镜像构建与容器启动通过
+- PostgreSQL 17：健康检查通过，Alembic 自动升级并创建 6 张表
+- 真实 HTTP 流程：注册、OAuth2 登录、JWT、岗位、关联任务和文档上传通过
+- 真实异常路径：未认证 401、错误密码 401、非法 URL 422
+- 容器删除并重建后，岗位、任务、文档元数据和上传文件均保持存在
 
 ## M2 验收
 
@@ -55,16 +59,17 @@ M2 已从单用户 JSON API 演进为 SQLAlchemy 多用户后端。认证、岗�
 - [x] Alembic 迁移可升降级并生成 PostgreSQL DDL
 - [x] OpenAPI 可覆盖注册、登录、岗位和文件流程
 - [x] Dockerfile 与 Compose 配置
-- [ ] 在安装 Docker 的环境执行 `docker compose up --build` 并走通真实 PostgreSQL 流程
+- [x] 在 Docker 环境执行 Compose 构建并走通真实 PostgreSQL 与持久化流程
 
 ## 下一次最小任务
 
-1. 在有 Docker 的环境运行 `docker compose up --build`。
-2. 从 `/docs` 走通注册、登录、创建岗位和上传文件。
-3. 验证通过后将 M2 标记为完全验收，进入 M3 LLM Provider 接口。
+1. 阅读路线图和学习指南中 M3 的 LLM Provider、提示词和结构化输出章节。
+2. 先定义不依赖具体厂商 SDK 的 Provider Protocol 和结构化输出 Schema。
+3. 用 Fake Provider 编写首个单元测试，再接入真实模型供应商。
 
 ## 已知问题与 Git
 
 - `Job.mark_updated()` 只属于 `examples/m1_cli`；正式 API 使用 ORM 的 `updated_at`。
 - `.venv.backup/` 和 `tools/` 已被忽略，不属于项目交付。
-- M1 搬迁、M2 后端、测试、容器和 CI 已拆分为本地提交，尚未推送；远程 CI 需在 push/PR 后验证。
+- Docker Desktop 已安装；命令行工具当前通过应用内绝对路径调用，未修改全局 shell 配置。
+- M1 搬迁、M2 后端、测试、容器和 CI 已提交并推送到 `origin/main`，远程 CI 已通过。
